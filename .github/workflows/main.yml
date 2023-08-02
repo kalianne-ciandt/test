@@ -49,6 +49,7 @@ jobs:
           declare -A deployEnvs
           declare -A createdTags
 
+          services=(content fulfillment location order payment pricing producer product retail-gateway crew-gateway)
           versionLevels[content]=$(echo ${{ steps.setup-inputs.outputs.content }})
           versionLevels[fulfillment]=$(echo ${{ steps.setup-inputs.outputs.fulfillment }})
           versionLevels[location]=$(echo ${{ steps.setup-inputs.outputs.location }})
@@ -67,7 +68,7 @@ jobs:
           deployEnvs[qa-03]=$(echo ${{ steps.setup-inputs.outputs.qa-03 }})
           deployEnvs[qa-04]=$(echo ${{ steps.setup-inputs.outputs.qa-04 }})
 
-          for i in ${versionLevels[@]}; do
+          for i in ${services[@]}; do
             if [[ "${versionLevels[all]}" != "-" ]] || [[ "${versionLevels[$i]}" != "" ]]; then
               # find last service version
               LAST_SERVICE_VERSION=$( git tag | grep $i | sort -r --version-sort | head -n1 )
