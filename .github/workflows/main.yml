@@ -1,0 +1,117 @@
+name: Create and Deploy tags
+
+on:
+  workflow_dispatch:
+    inputs:
+      services:
+        type: string
+        description: 'Set version bump level for each service or all by choosing below (v1.2.3: 1 = major, 2 = minor and 3 = patch) ======================================= Services'
+        required: true
+        default: '{ "content": "", "fulfillment": "", "location": "", "order": "", "payment": "", "pricing": "", "producer": "", "product": "", "retail-gateway": "", "crew-gateway": ""}'
+      all:
+        type: choice
+        description: All services
+        options:
+          - '-'
+          - patch
+          - minor
+          - major
+      deploy:
+        type: string
+        description: Set each environment to true to deploy the new tags
+        required: true
+        default: '{ "dev-01": "false", "qa-02": "false"}'
+jobs:
+  increment-tags:
+    runs-on: ubuntu-latest
+    environment: sandbox-cs
+    steps:
+      - name: Setup inputs from JSON
+        id: setup-inputs
+        run: |
+          echo '${{ inputs.services }}' | jq -r 'to_entries[] | "\(.key)=\(.value)"' | xargs -I '{}' echo "{}" >> "$GITHUB_OUTPUT"
+          echo '${{ inputs.deploy }}' | jq -r 'to_entries[] | "\(.key)=\(.value)"' | xargs -I '{}' echo "{}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Increment last tags
+        run: |
+          npm install -g semver
+          git fetch --tags origin
+
+          declare -A versionLevels
+          declare -A deployEnvs
+          declare -A createdTags
+
+          versionLevels[content]=$(echo ${{ steps.setup-inputs.outputs.content }})
+          versionLevels[fulfillment]=$(echo ${{ steps.setup-inputs.outputs.fulfillment }})
+          versionLevels[location]=$(echo ${{ steps.setup-inputs.outputs.location }})
+          versionLevels[order]=$(echo ${{ steps.setup-inputs.outputs.order }})
+          versionLevels[payment]=$(echo ${{ steps.setup-inputs.outputs.payment }})
+          versionLevels[pricing]=$(echo ${{ steps.setup-inputs.outputs.pricing }})
+          versionLevels[producer]=$(echo ${{ steps.setup-inputs.outputs.producer }})
+          versionLevels[product]=$(echo ${{ steps.setup-inputs.outputs.product }})
+          versionLevels[retail-gateway]=$(echo ${{ steps.setup-inputs.outputs.retail-gateway }})
+          versionLevels[crew-gateway]=$(echo ${{ steps.setup-inputs.outputs.crew-gateway }})
+          versionLevels[all]=${{ inputs.all }}
+
+          deployEnvs[dev-01]=$(echo ${{ steps.setup-inputs.outputs.dev-01 }})
+          deployEnvs[qa-01]=$(echo ${{ steps.setup-inputs.outputs.qa-01 }})
+          deployEnvs[qa-02]=$(echo ${{ steps.setup-inputs.outputs.qa-02 }})
+          deployEnvs[qa-03]=$(echo ${{ steps.setup-inputs.outputs.qa-03 }})
+          deployEnvs[qa-04]=$(echo ${{ steps.setup-inputs.outputs.qa-04 }})
+
+          for i in ${versionLevels[@]}; do
+            if [[ "${versionLevels[all]}" != "-" ]] || [[ "${versionLevels[$i]}" != "" ]]; then
+              # find last service version
+              LAST_SERVICE_VERSION=$( git tag | grep $i | sort -r --version-sort | head -n1 )
+              if [[ -z "$LAST_SERVICE_VERSION" ]]; then
+                echo "No previous version found"
+                LAST_SERVICE_VERSION=$( echo $i/v0.0.0 )
+              fi
+              echo "[$i] Current version = $LAST_SERVICE_VERSION"
+
+              # remove prefix
+              FIND="$i\/"
+              LAST_VERSION=$( echo $LAST_SERVICE_VERSION | sed -e "s/$FIND//g" )
+
+              # set increment level
+              TYPE=${versionLevels[$i]}
+              if [[ "$TYPE" == '' ]]; then
+                TYPE=${versionLevels[all]}
+              fi
+
+              # increment tag version
+              INCREMENTED_VERSION=$(semver $LAST_VERSION -i $TYPE)
+              INCREMENTED_SERVICE_VERSION=$( echo $i/v$( echo $INCREMENTED_VERSION ) )
+              echo "[$i] New version     = $INCREMENTED_SERVICE_VERSION"
+              git tag $INCREMENTED_SERVICE_VERSION
+              git push origin --tags
+
+              createdTags[$i]=$( echo $i:$INCREMENTED_VERSION)
+            fi
+          done
+
+          echo "createdTags=$createdTags" >> $GITHUB_OUTPUT
+
+      # - name: Configure AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@v2
+      #   if: ${{ inputs.deploy }}
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: us-east-1
+
+      - name: Deploy new tags
+        env:
+          createdTags: ${{ steps.setup-inputs.outputs.createdTags }}
+        run: |
+          for key in ${!createdTags[@]}; do
+            echo ".dkr.ecr.us-east-1.amazonaws.com/${createdTags[${key}]}"
+          done
