@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tag-list: ${{ fromJSON(inputs.tag-list) }}
+        tag-list: [test1, test2]
 
     steps:
       - name: Echo
