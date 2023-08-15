@@ -1,0 +1,12 @@
+name: Test reusable
+
+on:
+  push:
+    branches: 
+      - main
+
+jobs:
+  reuse-job:
+    uses: ./.github/workflows/reusable.yml
+    with:
+      tag-list: '[${{ github.ref_name }}]'
