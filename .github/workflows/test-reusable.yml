@@ -7,7 +7,6 @@ on:
 
 jobs:       
   reuse-job:
-    environment: build  
     uses: ./.github/workflows/reusable.yml
     with:
       tag-list: '["${{ github.ref_name }}"]'
