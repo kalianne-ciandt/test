@@ -1,0 +1,19 @@
+on:
+  workflow_call:
+    inputs:
+      tag-list:
+        required: true
+        type: string
+
+jobs:
+  app:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        tag-list: ${{ fromJSON(inputs.tag-list) }}
+
+    steps:
+      - name: Echo
+        run: |
+          echo ${{ matrix.tag-list }}
