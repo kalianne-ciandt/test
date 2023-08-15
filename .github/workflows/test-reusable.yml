@@ -14,7 +14,7 @@ jobs:
       - name: Setup tag list
         id: setup-tag-list
         run: |
-          echo "tagsJsonArr=[${{ github.ref_name }}] >> $GITHUB_OUTPUT
+          echo "tagsJsonArr=[${{ github.ref_name }}]" >> $GITHUB_OUTPUT
           
   reuse-job:
     needs: [setup-tag-list]
