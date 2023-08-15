@@ -9,4 +9,4 @@ jobs:
   reuse-job:
     uses: ./.github/workflows/reusable.yml
     with:
-      tag-list: '[${{ github.ref_name }}]'
+      tag-list: "[${{ github.ref_name }}]"
