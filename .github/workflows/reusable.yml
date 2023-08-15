@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tag-list: [test1, test2]
+        tag-list: ${{ [inputs.tag-list] }}
 
     steps:
       - name: Echo
