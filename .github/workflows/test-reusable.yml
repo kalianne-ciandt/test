@@ -6,7 +6,18 @@ on:
       - main
 
 jobs:
+  setup-tag-list:
+    runs-on: ubuntu-latest
+    outputs:
+      tagsJsonArr: ${{ steps.setup-tag-list.outputs.tagsJsonArr }}
+    steps:
+      - name: Setup tag list
+        id: setup-tag-list
+        run: |
+          echo "tagsJsonArr=[${{ github.ref_name }}] >> $GITHUB_OUTPUT
+          
   reuse-job:
+    needs: [setup-tag-list]
     uses: ./.github/workflows/reusable.yml
     with:
-      tag-list: "[${{ github.ref_name }}]"
+      tag-list: ${{ needs.setup-tag-list.outputs.tagsJsonArr }}
