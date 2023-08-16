@@ -16,7 +16,8 @@ jobs:
           
           ref=${{ github.ref_name }}
           if [[ "$ref" != "develop" ]]; then
-            refNoDash=$( echo $ref | sed -e "s/-//g" )
-            incrementedVersion=$incrementedVersion-${refNoDash##*/}
+            refFragment=${ref##*/}
+            refFragment=$( echo $refFragment | sed -e "s/-//g" )
+            incrementedVersion=$incrementedVersion-$refFragment
           fi
           echo $incrementedVersion
