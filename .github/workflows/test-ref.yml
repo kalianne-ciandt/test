@@ -1,0 +1,21 @@
+name: test ref
+
+on:
+  workflow_dispatch:
+    inputs:
+      services:
+        type: string
+
+jobs:
+  increment-tags:
+    runs-on: ubuntu-latest
+    steps:
+      - name: test
+        run: | 
+          incrementedVersion="1.0.0"
+          
+          ref=${{ github.ref_name }}
+          if [[ "$ref" != "develop" ]]; then
+            incrementedVersion=$incrementedVersion-${ref##*/}
+          fi
+          echo $incrementedVersion
