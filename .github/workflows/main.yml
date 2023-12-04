@@ -5,7 +5,7 @@ on:
     inputs:
       services:
         type: string
-        description: 'Set version bump level for each service or all by choosing below (e.g. {"content": "patch", "fulfillment": "minor", "location": "major", ...} ) ======================================= Services'
+        description: 'Insert version bump level for each service or all by choosing below (e.g. {"content": "patch", "fulfillment": "minor", "location": "major", ...}) ======================================= Services'
         required: true
         default: '{ "content": "", "fulfillment": "", "location": "", "order": "", "payment": "", "pricing": "", "producer": "", "product": "", "retail-gateway": "", "crew-gateway": ""}'
       all:
