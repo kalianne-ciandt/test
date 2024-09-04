@@ -13,6 +13,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test.txt
+          path: .github/workflows
           retention-days: 1
 
   two:
